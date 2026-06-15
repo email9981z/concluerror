@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página Protegida</title>
+    <title>Página de Bloqueio Robusto</title>
     <style>
-        /* Fundo branco e sem conteúdo visível */
         body {
             background-color: #ffffff;
             margin: 0;
@@ -13,89 +12,68 @@
             height: 100vh;
             width: 100vw;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: sans-serif;
-        }
-        
-        /* Garantir que nada seja exibido */
-        .content {
-            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="content">Conteúdo Restrito</div>
-
     <script>
         /**
-         * TÉCNICA 1: Manipulação do Histórico (History API)
-         * Inunda o histórico com a página atual para que o "voltar" apenas recarregue o estado atual.
+         * TÉCNICA AVANÇADA: Hash-Loop e Injeção Massiva de Histórico
+         * Esta técnica utiliza o hash da URL para criar estados de histórico que o navegador
+         * interpreta como "novas páginas", dificultando o retorno à origem real.
          */
-        function preventBack() {
-            // Adiciona um novo estado ao histórico imediatamente
-            window.history.pushState(null, "", window.location.href);
-            
-            // Escuta o evento de 'popstate' (quando o usuário tenta voltar ou avançar)
-            window.onpopstate = function() {
-                // Ao detectar a tentativa de voltar, empurra o estado novamente
-                window.history.pushState(null, "", window.location.href);
+
+        function robustBackLock() {
+            // 1. Inunda o histórico com múltiplos estados diferentes (usando hashes)
+            // Isso cria uma "barreira" de entradas no histórico.
+            for (let i = 0; i < 50; i++) {
+                window.history.pushState({ page: i }, `Etapa ${i}`, window.location.pathname + `#locked-${i}`);
+            }
+
+            // 2. Escuta o evento de mudança no histórico
+            window.addEventListener('popstate', function(event) {
+                // Sempre que o usuário tenta voltar, empurra ele de volta para o topo do "muro" de hashes
+                window.history.pushState(null, "", window.location.pathname + `#lock-active-${Date.now()}`);
+                // Força um redirecionamento interno para garantir que o estado seja processado
+                window.location.replace(window.location.pathname + "#main");
+            });
+
+            // 3. Bloqueio de cliques e interações que possam disparar navegação
+            document.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }, true);
+
+            // 4. Técnica de "Redirecionamento Circular"
+            // Se o navegador conseguir sair do estado atual por algum motivo, 
+            // este intervalo tenta "pescar" o usuário de volta.
+            setInterval(() => {
+                if (!window.location.hash.includes('locked')) {
+                    window.history.pushState(null, "", window.location.pathname + "#re-locked");
+                }
+            }, 100);
+        }
+
+        /**
+         * TÉCNICA DE REDIRECIONAMENTO DE SEGURANÇA
+         * Se o usuário tentar usar o histórico longo (clique direito no botão voltar),
+         * esta técnica tenta invalidar a tentativa.
+         */
+        function forceFocus() {
+            window.onblur = function() {
+                // Tenta recuperar o foco se o usuário interagir com a barra de ferramentas (limitado por segurança)
+                setTimeout(() => window.focus(), 10);
             };
         }
 
-        /**
-         * TÉCNICA 2: Loop de Histórico Adicional
-         * Garante que existam múltiplas entradas iguais no histórico.
-         */
-        function pushMultipleStates() {
-            for (let i = 0; i < 10; i++) {
-                window.history.pushState(null, "", window.location.href);
-            }
-        }
-
-        /**
-         * TÉCNICA 3: Bloqueio de Teclas de Atalho
-         * Impede o uso de Alt+Seta Esquerda ou Backspace (em navegadores antigos).
-         */
-        function blockShortcuts() {
-            window.addEventListener('keydown', function(e) {
-                // Alt + Seta Esquerda ou Backspace
-                if ((e.altKey && e.keyCode === 37) || (e.keyCode === 8)) {
-                    // Verifica se não é um campo de input para não quebrar a usabilidade normal (embora a página seja vazia)
-                    const target = e.target.nodeName.toLowerCase();
-                    if (target !== 'input' && target !== 'textarea') {
-                        e.preventDefault();
-                    }
-                }
-            });
-        }
-
-        /**
-         * TÉCNICA 4: Confirmação de Saída (BeforeUnload)
-         * Mostra um aviso ao tentar fechar ou navegar para fora (depende da interação do usuário com a página).
-         */
-        window.addEventListener('beforeunload', function (e) {
-            // Nota: Navegadores modernos exigem que o usuário tenha interagido com a página
-            // e geralmente mostram uma mensagem padrão do sistema, não a string personalizada.
-            e.preventDefault();
-            e.returnValue = '';
-        });
-
-        // Inicialização das técnicas
-        window.onload = function() {
-            preventBack();
-            pushMultipleStates();
-            blockShortcuts();
+        // Execução imediata e contínua
+        (function init() {
+            robustBackLock();
+            forceFocus();
             
-            // Reforço contínuo: Tenta empurrar o estado a cada segundo caso algo mude
-            setInterval(function() {
-                window.history.pushState(null, "", window.location.href);
-            }, 1000);
-        };
-
-        // Execução imediata para maior rapidez
-        preventBack();
+            // Impede que o usuário veja o menu de contexto (clique direito)
+            document.oncontextmenu = () => false;
+        })();
     </script>
 </body>
 </html>
