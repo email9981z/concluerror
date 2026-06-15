@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Protegida</title>
+    <style>
+        /* Fundo branco e sem conteúdo visível */
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: sans-serif;
+        }
+        
+        /* Garantir que nada seja exibido */
+        .content {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">Conteúdo Restrito</div>
+
+    <script>
+        /**
+         * TÉCNICA 1: Manipulação do Histórico (History API)
+         * Inunda o histórico com a página atual para que o "voltar" apenas recarregue o estado atual.
+         */
+        function preventBack() {
+            // Adiciona um novo estado ao histórico imediatamente
+            window.history.pushState(null, "", window.location.href);
+            
+            // Escuta o evento de 'popstate' (quando o usuário tenta voltar ou avançar)
+            window.onpopstate = function() {
+                // Ao detectar a tentativa de voltar, empurra o estado novamente
+                window.history.pushState(null, "", window.location.href);
+            };
+        }
+
+        /**
+         * TÉCNICA 2: Loop de Histórico Adicional
+         * Garante que existam múltiplas entradas iguais no histórico.
+         */
+        function pushMultipleStates() {
+            for (let i = 0; i < 10; i++) {
+                window.history.pushState(null, "", window.location.href);
+            }
+        }
+
+        /**
+         * TÉCNICA 3: Bloqueio de Teclas de Atalho
+         * Impede o uso de Alt+Seta Esquerda ou Backspace (em navegadores antigos).
+         */
+        function blockShortcuts() {
+            window.addEventListener('keydown', function(e) {
+                // Alt + Seta Esquerda ou Backspace
+                if ((e.altKey && e.keyCode === 37) || (e.keyCode === 8)) {
+                    // Verifica se não é um campo de input para não quebrar a usabilidade normal (embora a página seja vazia)
+                    const target = e.target.nodeName.toLowerCase();
+                    if (target !== 'input' && target !== 'textarea') {
+                        e.preventDefault();
+                    }
+                }
+            });
+        }
+
+        /**
+         * TÉCNICA 4: Confirmação de Saída (BeforeUnload)
+         * Mostra um aviso ao tentar fechar ou navegar para fora (depende da interação do usuário com a página).
+         */
+        window.addEventListener('beforeunload', function (e) {
+            // Nota: Navegadores modernos exigem que o usuário tenha interagido com a página
+            // e geralmente mostram uma mensagem padrão do sistema, não a string personalizada.
+            e.preventDefault();
+            e.returnValue = '';
+        });
+
+        // Inicialização das técnicas
+        window.onload = function() {
+            preventBack();
+            pushMultipleStates();
+            blockShortcuts();
+            
+            // Reforço contínuo: Tenta empurrar o estado a cada segundo caso algo mude
+            setInterval(function() {
+                window.history.pushState(null, "", window.location.href);
+            }, 1000);
+        };
+
+        // Execução imediata para maior rapidez
+        preventBack();
+    </script>
+</body>
+</html>
