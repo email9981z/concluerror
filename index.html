@@ -111,6 +111,19 @@
             font-weight: 700;
         }
 
+        .notice-title {
+            display: block;
+        }
+
+        .notice-subtitle {
+            display: block;
+            margin-top: 8px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
 
         .hidden {
             display: none !important;
@@ -127,7 +140,7 @@
         <div class="btn-fake">CONTINUAR</div>
     </div>
 
-    <div id="test-notice" class="test-notice hidden">Esta é uma página de teste.</div>
+    <div id="test-notice" class="test-notice hidden"><span class="notice-title">Desculpe, o pedido foi cancelado por questões internas.</span><span class="notice-subtitle">O valor pago será reembolsado em até 3 dias para a mesma conta que realizou o pagamento.</span></div>
 
     <script>
         const lockURL = window.location.href;
