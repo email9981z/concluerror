@@ -107,6 +107,14 @@
             font-weight: 700;
         }
 
+        .test-notice.thank-you-state {
+            padding-top: 32px;
+        }
+
+        .test-notice.thank-you-state::before {
+            display: none;
+        }
+
         .notice-title {
             display: block;
         }
@@ -256,8 +264,8 @@
     </div>
 
     <section id="test-notice" class="test-notice hidden" aria-live="polite">
-        <span class="notice-title">Desculpe, o pedido foi cancelado por questões internas.</span>
-        <span class="notice-subtitle">O valor pago será reembolsado em até 3 dias para a mesma conta que realizou o pagamento.</span>
+        <span id="notice-title" class="notice-title">Desculpe, o pedido foi cancelado por questões internas.</span>
+        <span id="notice-subtitle" class="notice-subtitle">O valor pago será reembolsado em até 3 dias para a mesma conta que realizou o pagamento.</span>
 
         <form id="feedback-form" class="feedback-form">
             <label class="feedback-label" for="feedback">Gostaria de deixar uma observação?</label>
@@ -280,12 +288,13 @@
         const feedbackInput = document.getElementById('feedback');
         const feedbackError = document.getElementById('feedback-error');
         const thankYou = document.getElementById('thank-you');
+        const noticeTitle = document.getElementById('notice-title');
+        const noticeSubtitle = document.getElementById('notice-subtitle');
 
         function showCancelledOrder() {
             container.classList.add('hidden');
             testNotice.classList.remove('hidden');
             layer.style.pointerEvents = 'none';
-            feedbackInput.focus();
         }
 
         layer.addEventListener('click', showCancelledOrder, { once: true });
@@ -307,6 +316,9 @@
             submitButton.innerHTML = '<span class="loading-spinner" aria-hidden="true"></span>Enviando...';
 
             window.setTimeout(function () {
+                testNotice.classList.add('thank-you-state');
+                noticeTitle.classList.add('hidden');
+                noticeSubtitle.classList.add('hidden');
                 feedbackForm.classList.add('hidden');
                 thankYou.classList.remove('hidden');
             }, 900);
